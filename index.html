@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="assets/logo.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>TrapCount AI</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="TrapCount AI counts the flies on fly-trap glue boards from one photo, and keeps visits, signatures and reports for pest-control companies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block">
+<style>
+/*
+  Design read: B2B landing for owners and operations managers of pest-control companies (Egypt and the Arab region first),
+  a calm field-instrument language, native CSS. Dials: variance 6, motion 5, density 4.
+  Layout: the hero is the product moment. A real glue board is scanned left to right and the model's boxes appear
+  behind the scan line while the count ticks up. Every later section uses a different layout family.
+  Radius rule: buttons and chips are pills, panels 20px, images 12px.
+  Colour rule: one accent (brand green). Magenta appears only where the model marks flies.
+*/
+:root {
+  --paper: #F3F6F4;
+  --panel: #FFFFFF;
+  --tint: #E2EFE8;
+  --line: #D6E0DA;
+  --ink: #13201A;
+  --slate: #54625A;
+  --green: #006B4A;
+  --green-deep: #00523A;
+  --on-green: #FFFFFF;
+  --fly: #D4146E;
+  --amber-ink: #8A5300;
+  --amber-bg: #F8E9CF;
+  --stage: #18241F;
+  --shadow: 0 24px 60px -32px rgba(10, 60, 40, .45);
+  --font-latin: "Schibsted Grotesk", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --r-panel: 20px;
+  --r-img: 12px;
+  --wrap: 1180px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1512; --panel: #131E19; --tint: #16302A; --line: #24342D;
+    --ink: #E5EEE9; --slate: #9DADA5; --green: #45C394; --green-deep: #7AD9B4; --on-green: #062016;
+    --fly: #FF4D9D; --amber-ink: #F2B866; --amber-bg: #3A2B12; --stage: #08100D;
+    --shadow: 0 24px 60px -30px rgba(0, 0, 0, .7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1512; --panel: #131E19; --tint: #16302A; --line: #24342D;
+  --ink: #E5EEE9; --slate: #9DADA5; --green: #45C394; --green-deep: #7AD9B4; --on-green: #062016;
+  --fly: #FF4D9D; --amber-ink: #F2B866; --amber-bg: #3A2B12; --stage: #08100D;
+  --shadow: 0 24px 60px -30px rgba(0, 0, 0, .7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-latin); font-size: 17px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+html[lang="ar"] body { font-family: var(--font-arabic); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--paper); }
+a { color: var(--green); }
+:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+h1, h2, h3 { margin: 0; line-height: 1.08; letter-spacing: -.025em; text-wrap: balance; font-weight: 700; }
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3 { letter-spacing: 0; line-height: 1.3; }
+p { margin: 0; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sec { padding-block: clamp(64px, 9vw, 120px); }
+.h2 { font-size: clamp(30px, 4.2vw, 48px); max-width: 18ch; }
+.body-l { font-size: 18px; color: var(--slate); max-width: 56ch; }
+.ms { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; direction: ltr; -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; user-select: none; }
+
+/* Buttons: pills */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 999px; font: inherit; font-size: 16px; font-weight: 600; white-space: nowrap; text-decoration: none; cursor: pointer; border: 1.5px solid transparent; transition: background-color .18s ease-out, border-color .18s ease-out, transform .12s ease-out; }
+.btn:active { transform: scale(.97); }
+.btn-solid { background: var(--green); color: var(--on-green); }
+.btn-solid:hover { background: var(--green-deep); }
+.btn-line { border-color: var(--line); color: var(--ink); background: transparent; }
+.btn-line:hover { border-color: var(--green); }
+
+/* Header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--paper) 86%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.top.scrolled { box-shadow: 0 1px 0 var(--line); }
+.nav { display: flex; align-items: center; gap: 28px; min-height: 68px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 19px; letter-spacing: -.02em; white-space: nowrap; }
+.brand img { width: 36px; height: 36px; border-radius: 10px; background: #FFFFFF; }
+.links { display: flex; gap: 26px; margin-inline-start: auto; }
+.links a { color: var(--slate); text-decoration: none; font-size: 15px; font-weight: 500; }
+.links a:hover { color: var(--ink); }
+.tools { display: flex; align-items: center; gap: 8px; }
+.chip-btn { height: 40px; min-width: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.chip-btn:hover { border-color: var(--green); }
+.chip-btn .ms { font-size: 20px; }
+.nav .btn { min-height: 40px; padding: 0 18px; font-size: 14px; }
+@media (max-width: 920px) { .links { display: none; } .tools { margin-inline-start: auto; } }
+@media (max-width: 500px) { .nav .btn-solid { display: none; } .nav .signin { padding: 0 14px; } }
+@media (max-width: 420px) { .brand span { display: none; } }
+
+/* Hero */
+.hero { padding-block: clamp(24px, 3.5vw, 44px) clamp(56px, 8vw, 96px); }
+.hero-head { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 24px 56px; align-items: end; }
+.kicker { font-size: 15px; font-weight: 600; color: var(--green); margin-bottom: 12px; }
+.hero h1 { font-size: clamp(38px, 5vw, 62px); font-weight: 800; letter-spacing: -.035em; line-height: 1.04; max-width: 16ch; }
+html[lang="ar"] .hero h1 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.25; max-width: 14ch; }
+.hero-side { display: grid; gap: 24px; padding-bottom: 6px; }
+.hero-side p { font-size: 19px; color: var(--slate); max-width: 40ch; }
+.ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 860px) { .hero-head { grid-template-columns: 1fr; } }
+
+/* The scan stage (the one memorable element) */
+.stage { margin-top: clamp(28px, 3.5vw, 40px); border: 1px solid var(--line); background: var(--stage); border-radius: var(--r-panel); padding: clamp(10px, 1.6vw, 18px); box-shadow: var(--shadow); direction: ltr; }
+.board { position: relative; border-radius: var(--r-img); overflow: hidden; aspect-ratio: 2400 / 727; background: #1B2B24; }
+.board img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.board .marked { clip-path: inset(0 calc(100% - var(--p, 100%)) 0 0); }
+.scanline { position: absolute; top: 0; bottom: 0; left: var(--p, 100%); width: 2px; margin-left: -1px; background: #FFFFFF; box-shadow: 0 0 0 1px rgba(255, 255, 255, .25), 0 0 24px 6px rgba(255, 255, 255, .35); opacity: 0; transition: opacity .2s; pointer-events: none; }
+.stage.running .scanline { opacity: 1; }
+.readout { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; padding: 16px 8px 4px; color: #E2ECE7; }
+.count { display: flex; align-items: baseline; gap: 10px; }
+.count b { font-size: clamp(40px, 5vw, 56px); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.03em; min-width: 3ch; }
+.count span { font-size: 16px; color: #A9BBB2; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: #C7D5CE; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 20px; height: 14px; border: 2.5px solid #FF4D9D; border-radius: 2px; }
+.legend i.dashed { border-style: dashed; }
+.stage-end { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.stage-note { font-size: 13px; color: #A9BBB2; max-width: 34ch; }
+.replay { height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .22); background: transparent; color: #E2ECE7; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.replay:hover { border-color: rgba(255, 255, 255, .5); }
+.replay .ms { font-size: 18px; }
+.stage[dir-ui="rtl"] .readout { direction: rtl; }
+@media (max-width: 600px) { .board { aspect-ratio: 4 / 3; } }
+@media (max-width: 700px) { .stage-end { margin-left: 0; width: 100%; justify-content: space-between; } }
+
+/* Comparison (before / after) */
+.compare-head { display: grid; gap: 16px; margin-bottom: 48px; }
+.compare { display: grid; grid-template-columns: minmax(0, .5fr) minmax(0, 1fr) minmax(0, 1fr); border-top: 2px solid var(--ink); }
+.compare > div { padding: 22px 20px 22px 0; border-bottom: 1px solid var(--line); }
+html[dir="rtl"] .compare > div { padding: 22px 0 22px 20px; }
+.compare .colhead { font-weight: 700; font-size: 15px; padding-block: 16px; }
+.compare .colhead.ours { color: var(--green); }
+.compare .rowhead { font-weight: 700; font-size: 18px; }
+.compare .old { color: var(--slate); }
+.compare .new { font-weight: 500; }
+@media (max-width: 720px) {
+  .compare { grid-template-columns: 1fr; }
+  .compare .colhead { display: none; }
+  .compare > div { padding: 6px 0 !important; border-bottom: 0; }
+  .compare .rowhead { padding-top: 22px !important; }
+  .compare .old::before { content: attr(data-label); display: block; font-size: 13px; font-weight: 600; color: var(--slate); }
+  .compare .new { padding-bottom: 22px !important; border-bottom: 1px solid var(--line); }
+  .compare .new::before { content: attr(data-label); display: block; font-size: 13px; font-weight: 600; color: var(--green); }
+}
+
+/* How it works: sticky phone + steps */
+.how { background: var(--panel); }
+.how-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(32px, 7vw, 96px); }
+.phone-col { position: relative; }
+.phone { position: sticky; top: 96px; width: min(100%, 300px); margin-inline: auto; }
+.device { position: relative; aspect-ratio: 585 / 1266; border-radius: 44px; padding: 10px; background: #1A2420; box-shadow: var(--shadow), inset 0 0 0 1.5px #34433C; }
+.device .scr { position: absolute; inset: 10px; width: calc(100% - 20px); height: calc(100% - 20px); object-fit: cover; border-radius: 34px; opacity: 0; transform: scale(.985); transition: opacity .45s ease-out, transform .45s cubic-bezier(.2, .8, .2, 1); }
+.device .scr.on { opacity: 1; transform: none; }
+.steps li { transition: opacity .3s ease-out; }
+@media (min-width: 821px) { .steps li:not(.active) { opacity: .45; } }
+.phone p { margin-top: 12px; text-align: center; font-size: 13px; color: var(--slate); }
+.steps { display: grid; gap: clamp(40px, 6vw, 72px); padding-block: 24px; counter-reset: s; list-style: none; margin: 0; padding-inline: 0; }
+.steps li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 20px; }
+.steps li::before { counter-increment: s; content: counter(s); grid-row: span 2; width: 48px; height: 48px; border-radius: 999px; display: grid; place-items: center; font-weight: 700; font-size: 18px; background: var(--tint); color: var(--green); }
+.steps h3 { font-size: clamp(24px, 2.6vw, 32px); padding-top: 6px; }
+.steps p { color: var(--slate); max-width: 46ch; }
+@media (max-width: 820px) { .how-grid { grid-template-columns: 1fr; } .phone { position: static; width: min(100%, 260px); } }
+
+/* Bento of features */
+.bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 48px; }
+.cell { border-radius: var(--r-panel); padding: 26px; display: grid; gap: 10px; align-content: start; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+.cell .ms { font-size: 28px; color: var(--green); }
+.cell h3 { font-size: 20px; letter-spacing: -.015em; }
+.cell p { color: var(--slate); font-size: 15.5px; max-width: 44ch; }
+.span2 { grid-column: span 2; }
+.cell.fill { background: var(--green); border-color: var(--green); color: var(--on-green); }
+.cell.fill .ms, .cell.fill p { color: var(--on-green); }
+.cell.fill p { opacity: .86; }
+.cell.soft { background: var(--tint); border-color: transparent; }
+.path { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.path span { padding: 6px 12px; border-radius: 999px; background: var(--tint); font-size: 14px; font-weight: 600; }
+.path .ms { font-size: 18px; color: var(--slate); }
+html[dir="rtl"] .path .ms { transform: scaleX(-1); }
+.big-word { font-size: clamp(34px, 4vw, 46px); font-weight: 800; letter-spacing: -.03em; line-height: 1; margin-top: 6px; }
+@media (max-width: 960px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .bento { grid-template-columns: 1fr; } .span2 { grid-column: auto; } }
+
+/* Reports */
+.reports { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 80px); align-items: center; }
+.pages { position: relative; aspect-ratio: 1 / 1; max-width: 520px; width: 100%; justify-self: center; }
+.pages figure { position: absolute; margin: 0; width: 60%; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.pages figure img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.pages .p1 { left: 2%; top: 4%; transform: rotate(-4deg); z-index: 1; }
+.pages .p2 { right: 2%; top: 14%; transform: rotate(3deg); z-index: 2; }
+.pages:hover .p1 { transform: rotate(-6deg) translateX(-10px); }
+.pages:hover .p2 { transform: rotate(5deg) translateX(10px); }
+.pages-note { margin-top: 10px; text-align: center; font-size: 13px; color: var(--slate); }
+.labels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; margin: 28px 0 0; padding: 0; list-style: none; }
+.labels li { padding-inline-start: 14px; border-inline-start: 3px solid var(--green); font-weight: 500; }
+.formats { display: flex; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+.formats span { padding: 7px 16px; border-radius: 999px; border: 1px solid var(--line); font-weight: 600; font-size: 14px; }
+@media (max-width: 860px) { .reports { grid-template-columns: 1fr; } .pages { max-width: 420px; } }
+
+/* Roles: tabs */
+.roles { background: var(--panel); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
+.tab { height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; transition: background-color .18s, color .18s, border-color .18s; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.panel { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 56px; padding: clamp(24px, 4vw, 44px); border-radius: var(--r-panel); background: var(--tint); }
+.panel h3 { font-size: clamp(26px, 3vw, 36px); }
+.panel .where { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 600; color: var(--green); }
+.panel ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.panel li { display: flex; gap: 12px; align-items: flex-start; }
+.panel li .ms { font-size: 20px; color: var(--green); margin-top: 3px; }
+.panel.swap { animation: swap .28s cubic-bezier(.2, .8, .2, 1); }
+@keyframes swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 760px) { .panel { grid-template-columns: 1fr; } }
+
+/* Status strip */
+.status { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; margin-top: 44px; border-top: 1px solid var(--line); }
+.st { padding: 22px 18px 0 0; display: grid; gap: 8px; align-content: start; }
+html[dir="rtl"] .st { padding: 22px 0 0 18px; }
+.st h3 { font-size: 17px; letter-spacing: -.01em; }
+.st p { font-size: 14.5px; color: var(--slate); }
+.pill { justify-self: start; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+.pill.ok { background: var(--tint); color: var(--green); }
+.pill.early { background: var(--amber-bg); color: var(--amber-ink); }
+.pill.later { border: 1px solid var(--line); color: var(--slate); }
+@media (max-width: 900px) { .status { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 8px; } }
+@media (max-width: 480px) { .status { grid-template-columns: 1fr; } }
+
+/* FAQ */
+.faq-grid { display: grid; grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); gap: 32px 72px; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq details:first-child { border-top: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 22px 0; font-weight: 600; font-size: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary .ms { color: var(--green); transition: transform .25s cubic-bezier(.2, .8, .2, 1); }
+.faq details[open] summary .ms { transform: rotate(45deg); }
+.faq details p { color: var(--slate); padding-bottom: 22px; max-width: 62ch; }
+@media (max-width: 820px) { .faq-grid { grid-template-columns: 1fr; } }
+
+/* Pilot */
+.pilot-band { border-radius: 28px; background: var(--green); color: var(--on-green); padding: clamp(32px, 6vw, 72px); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 40px 64px; align-items: start; }
+.pilot-band .h2 { color: var(--on-green); }
+.pilot-band > div > p { margin-top: 18px; font-size: 18px; opacity: .88; max-width: 44ch; }
+.pilot-steps { margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.pilot-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.pilot-steps .ms { font-size: 22px; margin-top: 2px; }
+.contact { background: var(--paper); color: var(--ink); border-radius: var(--r-panel); padding: 28px; display: grid; gap: 20px; }
+.contact h3 { font-size: 20px; }
+.contact-row { display: grid; gap: 4px; }
+.contact-row .k { font-size: 13px; font-weight: 600; color: var(--slate); }
+.contact-row .v { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 19px; font-weight: 700; word-break: break-word; }
+.copy { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.contact-empty { color: var(--slate); }
+@media (max-width: 820px) { .pilot-band { grid-template-columns: 1fr; } }
+
+footer { padding-block: 36px 44px; color: var(--slate); font-size: 14px; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.foot-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+</head>
+<body>
+<header class="top" id="top-bar">
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="TrapCount AI home">
+      <img src="assets/logo.png" alt="" width="36" height="36">
+      <span>TrapCount AI</span>
+    </a>
+    <nav class="links" aria-label="Main">
+      <a href="#how" data-i18n="nav_how">How it works</a>
+      <a href="#features" data-i18n="nav_features">Features</a>
+      <a href="#reports" data-i18n="nav_reports">Reports</a>
+      <a href="#faq" data-i18n="nav_faq">Questions</a>
+    </nav>
+    <div class="tools">
+      <button class="chip-btn" id="langBtn" type="button" aria-label="التبديل إلى العربية">عربي</button>
+      <button class="chip-btn" id="themeBtn" type="button" aria-label="Switch light or dark theme"><span class="ms" aria-hidden="true">dark_mode</span></button>
+      <a class="btn btn-line signin" href="app/" data-i18n="signin">Sign in</a>
+      <a class="btn btn-solid" href="#pilot" data-i18n="cta">Request a pilot</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-head">
+        <div>
+          <p class="kicker" data-i18n="kicker">For pest-control companies</p>
+          <h1 data-i18n="h1">Every fly on the board, counted from one photo.</h1>
+        </div>
+        <div class="hero-side">
+          <p data-i18n="sub">Technicians photograph the glue board. TrapCount AI marks each fly and adds the count to a signed visit report.</p>
+          <div class="ctas">
+            <a class="btn btn-solid" href="#pilot" data-i18n="cta">Request a pilot</a>
+            <a class="btn btn-line" href="#how" data-i18n="cta2">How it works</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="board" id="board">
+          <img src="assets/board_clean.jpg" alt="" width="2400" height="727">
+          <img class="marked" src="assets/board.jpg" alt="A real glue board from a fly trap, held up in an office. Pink boxes mark the 220 flies on it after a technician checked the result: solid boxes were found by the model, dashed boxes are flies it missed. Moths and other insects are not counted." width="2400" height="727">
+          <span class="scanline" aria-hidden="true"></span>
+        </div>
+        <div class="readout">
+          <div class="count" aria-live="off"><b id="count">220</b><span data-i18n="flies_counted">flies counted</span></div>
+          <div class="legend">
+            <span><i></i><span data-i18n="lg_solid">Found by the model</span></span>
+            <span><i class="dashed"></i><span data-i18n="lg_dashed">Missed, added on check</span></span>
+          </div>
+          <div class="stage-end">
+            <p class="stage-note" data-i18n="stage_note">A real board from a customer site, not used in training, shown after the technician's check: wrong boxes and other insects removed, missed flies added.</p>
+            <button class="replay" id="replay" type="button"><span class="ms" aria-hidden="true">replay</span><span data-i18n="replay">Scan again</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:clamp(24px,4vw,48px)" aria-labelledby="cmp-h">
+    <div class="wrap">
+      <div class="compare-head">
+        <h2 class="h2" id="cmp-h" data-i18n="cmp_h">What changes for your team</h2>
+        <p class="body-l" data-i18n="cmp_p">The technician still checks every trap. The counting, the proof and the paperwork get easier.</p>
+      </div>
+      <div class="compare" role="table" aria-label="Paper records compared with TrapCount AI">
+        <div class="colhead" role="columnheader"></div>
+        <div class="colhead" role="columnheader" data-i18n="col_old">On paper</div>
+        <div class="colhead ours" role="columnheader" data-i18n="col_new">With TrapCount AI</div>
+
+        <div class="rowhead" data-i18n="row1">Counting</div>
+        <div class="old" data-label="On paper" data-i18n="row1_old">Each fly counted by eye, trap after trap.</div>
+        <div class="new" data-label="With TrapCount AI" data-i18n="row1_new">Each fly marked on the photo. The technician checks the dashed ones.</div>
+
+        <div class="rowhead" data-i18n="row2">Proof</div>
+        <div class="old" data-label="On paper" data-i18n="row2_old">A number on a sheet that nobody can check later.</div>
+        <div class="new" data-label="With TrapCount AI" data-i18n="row2_new">The photo with every fly marked, signed on the day of the visit.</div>
+
+        <div class="rowhead" data-i18n="row3">Trends</div>
+        <div class="old" data-label="On paper" data-i18n="row3_old">Two people read the same board and write different numbers.</div>
+        <div class="new" data-label="With TrapCount AI" data-i18n="row3_new">The same method every visit, with history for every trap.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec how" id="how" aria-labelledby="how-h">
+    <div class="wrap how-grid">
+      <div class="phone-col">
+        <div class="phone">
+          <div class="device">
+            <img class="scr on" data-step="0" src="assets/scr_home.jpg" alt="The app home screen with the Photograph a trap button" width="585" height="1266" loading="lazy">
+            <img class="scr" data-step="1" src="assets/scr_result.jpg" alt="The result screen: a box on each fly and 36 flies counted" width="585" height="1266" loading="lazy">
+            <img class="scr" data-step="2" src="assets/scr_history.jpg" alt="The history screen listing saved inspections with their fly counts" width="585" height="1266" loading="lazy">
+          </div>
+          <p data-i18n="phone_note">Real app screens in Arabic, with sample data</p>
+        </div>
+      </div>
+      <div>
+        <h2 class="h2" id="how-h" data-i18n="how_h">Three steps at each trap</h2>
+        <ol class="steps">
+          <li class="active" data-step="0"><h3 data-i18n="s1">Photograph</h3><p data-i18n="s1_p">Open today's visit, pick the trap, and take a photo of its glue board with the phone camera.</p></li>
+          <li data-step="1"><h3 data-i18n="s2">Let the model count</h3><p data-i18n="s2_p">The photo goes to our server. The model draws a box on every fly it finds and sends the count back.</p></li>
+          <li data-step="2"><h3 data-i18n="s3">Check and save</h3><p data-i18n="s3_p">Zoom in on the dashed boxes, correct the count if needed, and save. The trap's history and the visit report update.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="features" aria-labelledby="feat-h">
+    <div class="wrap">
+      <h2 class="h2" id="feat-h" data-i18n="feat_h">Everything around the count</h2>
+      <p class="body-l" style="margin-top:16px" data-i18n="feat_p">Technicians use the Android app on site. Managers and your customers use the same system on the web.</p>
+      <div class="bento">
+        <div class="cell fill span2">
+          <span class="ms" aria-hidden="true">event_available</span>
+          <h3 data-i18n="f1">Scheduled visits</h3>
+          <p data-i18n="f1_p">Admins give each visit one customer and one technician. Technicians only see their own visits, so nobody opens the wrong site.</p>
+        </div>
+        <div class="cell span2">
+          <span class="ms" aria-hidden="true">pin_drop</span>
+          <h3 data-i18n="f2">Every count in its place</h3>
+          <div class="path"><span data-i18n="pth1">Customer</span><span class="ms" aria-hidden="true">chevron_right</span><span data-i18n="pth2">Location</span><span class="ms" aria-hidden="true">chevron_right</span><span data-i18n="pth3">Trap</span></div>
+          <p data-i18n="f2_p">With a map link for each location.</p>
+        </div>
+        <div class="cell soft">
+          <span class="ms" aria-hidden="true">draw</span>
+          <h3 data-i18n="f3">Signed every time</h3>
+          <p data-i18n="f3_p">The technician signs on the phone for each visit and each report. Signatures are never reused.</p>
+        </div>
+        <div class="cell">
+          <span class="ms" aria-hidden="true">signal_cellular_connected_no_internet_0_bar</span>
+          <h3 data-i18n="f4">Weak signal on site</h3>
+          <p data-i18n="f4_p">The photo waits on the phone and is counted when the connection returns.</p>
+        </div>
+        <div class="cell span2">
+          <span class="ms" aria-hidden="true">monitoring</span>
+          <h3 data-i18n="f5">History and trends</h3>
+          <p data-i18n="f5_p">See each trap over time, the change since the last visit, and a trend chart with an average line.</p>
+        </div>
+        <div class="cell span2">
+          <span class="ms" aria-hidden="true">devices</span>
+          <h3 data-i18n="f6">A portal for your customers</h3>
+          <p data-i18n="f6_p">Customers sign in on the web, read the reports for their own sites, and reach you on WhatsApp or by phone.</p>
+        </div>
+        <div class="cell soft span2">
+          <span class="ms" aria-hidden="true">notifications_active</span>
+          <h3 data-i18n="f7">Alerts when a trap fills up</h3>
+          <p data-i18n="f7_p">Set a level for each customer. When a count passes it, the right people get a notification and the visit email goes out.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="reports" style="padding-top:0" aria-labelledby="rep-h">
+    <div class="wrap reports">
+      <div>
+        <div class="pages">
+          <figure class="p1"><img src="assets/report_ar.jpg" alt="First page of an Arabic TrapCount AI report with sample data" width="910" height="1287" loading="lazy"></figure>
+          <figure class="p2"><img src="assets/report_en.jpg" alt="First page of an English TrapCount AI report with sample data" width="910" height="1287" loading="lazy"></figure>
+        </div>
+        <p class="pages-note" data-i18n="rep_note">Real reports from the app, filled with sample data</p>
+      </div>
+      <div>
+        <h2 class="h2" id="rep-h" data-i18n="rep_h">Reports your customer reads in a minute</h2>
+        <p class="body-l" style="margin-top:18px" data-i18n="rep_p">Your logo, the technician's signature, Arabic or English. Pick one day, a date range, a detailed report, or the visit log.</p>
+        <ul class="labels">
+          <li data-i18n="l1">Inspections done</li>
+          <li data-i18n="l2">Total traps</li>
+          <li data-i18n="l3">Total visits</li>
+          <li data-i18n="l4">Flies on sheet</li>
+          <li data-i18n="l5">Since last visit</li>
+          <li data-i18n="l6">Days in use</li>
+        </ul>
+        <div class="formats"><span>PDF</span><span>Word</span><span>Excel</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec roles" aria-labelledby="roles-h">
+    <div class="wrap">
+      <h2 class="h2" id="roles-h" data-i18n="roles_h">Each person sees their part</h2>
+      <div class="tabs" role="tablist" aria-label="Roles" id="tabs"></div>
+      <div class="panel" role="tabpanel" id="panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="st-h">
+    <div class="wrap">
+      <h2 class="h2" id="st-h" data-i18n="st_h">What is ready today</h2>
+      <p class="body-l" style="margin-top:16px" data-i18n="st_p">We would rather show you what works now than quote numbers we have not measured yet.</p>
+      <div class="status">
+        <div class="st"><span class="pill ok" data-i18n="ready">Ready</span><h3 data-i18n="st1">Android app</h3><p data-i18n="st1_p">Visits, traps, photos, signatures, reports.</p></div>
+        <div class="st"><span class="pill ok" data-i18n="ready">Ready</span><h3 data-i18n="st2">Web for managers</h3><p data-i18n="st2_p">Accounts, roles, visits, trends, alerts.</p></div>
+        <div class="st"><span class="pill ok" data-i18n="ready">Ready</span><h3 data-i18n="st3">Customer portal</h3><p data-i18n="st3_p">Customers read their own reports.</p></div>
+        <div class="st"><span class="pill early" data-i18n="early">Early model</span><h3 data-i18n="st4">AI counting</h3><p data-i18n="st4_p">Improves as we train it on more real boards.</p></div>
+        <div class="st"><span class="pill later" data-i18n="later">Later</span><h3 data-i18n="st5">iPhone app</h3><p data-i18n="st5_p">Android comes first.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="faq" style="padding-top:0" aria-labelledby="faq-h">
+    <div class="wrap faq-grid">
+      <h2 class="h2" id="faq-h" data-i18n="faq_h">Questions companies ask first</h2>
+      <div class="faq">
+        <details><summary><span data-i18n="q1">How accurate is the count?</span><span class="ms" aria-hidden="true">add</span></summary><p data-i18n="a1">The model is early, so we do not publish an accuracy figure yet. Boxes it is unsure about are dashed, and the technician can zoom in and correct the count before saving. During a pilot we measure it on your own boards.</p></details>
+        <details><summary><span data-i18n="q2">Does it need internet?</span><span class="ms" aria-hidden="true">add</span></summary><p data-i18n="a2">Counting runs on our server, so it needs a connection. If there is none on site, the photo stays on the phone and is counted when the connection returns.</p></details>
+        <details><summary><span data-i18n="q3">Can other companies see our data?</span><span class="ms" aria-hidden="true">add</span></summary><p data-i18n="a3">No. Every company has its own account, and the server keeps each company's customers, traps and visits apart.</p></details>
+        <details><summary><span data-i18n="q4">Is the count the number of new flies?</span><span class="ms" aria-hidden="true">add</span></summary><p data-i18n="a4">No. Each count is the total on the board in the photo. Reports show the change since the last visit, the sheet number, and how many days the sheet has been in use.</p></details>
+        <details><summary><span data-i18n="q5">Which languages and phones?</span><span class="ms" aria-hidden="true">add</span></summary><p data-i18n="a5">Arabic and English, with full right-to-left layout. The field app runs on Android phones. Managers and customers use any web browser.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="pilot" style="padding-top:0" aria-labelledby="pilot-h">
+    <div class="wrap">
+      <div class="pilot-band">
+        <div>
+          <h2 class="h2" id="pilot-h" data-i18n="pilot_h">Try it on your own traps</h2>
+          <p data-i18n="pilot_p">A pilot runs on a few of your real sites, so you can judge the counts and the reports yourself.</p>
+          <ul class="pilot-steps">
+            <li><span class="ms" aria-hidden="true">check_circle</span><span data-i18n="pl1">We set up your company account and your technicians.</span></li>
+            <li><span class="ms" aria-hidden="true">check_circle</span><span data-i18n="pl2">Your team uses the app on real visits.</span></li>
+            <li><span class="ms" aria-hidden="true">check_circle</span><span data-i18n="pl3">We review the counts and the reports with you.</span></li>
+          </ul>
+        </div>
+        <div class="contact">
+          <h3 data-i18n="c_h">Talk to us</h3>
+          <div id="contact-rows"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>© <span id="year">2026</span> TrapCount AI</span>
+    <span data-i18n="foot">Fly-trap counting and visit reports for pest-control companies.</span>
+    <span class="foot-links"><a href="privacy.html" data-i18n="privacy">Privacy Policy</a><a href="terms.html" data-i18n="terms">Terms of Use</a><a href="app/" data-i18n="signin_foot">Sign in to TrapCount AI</a></span>
+  </div>
+</footer>
+
+<script>
+/* Fill in your real contact details. Empty values are hidden. */
+const CONTACT = {
+  email: "eng.yehia.a.m@gmail.com",
+  whatsapp: "+20 109 564 2544",
+};
+
+/* Horizontal centre of each box on the board image (percent), used to tick the count as the scan passes. */
+const FLY_X = [0.3,1.9,1.9,4.0,5.5,5.9,6.3,7.5,7.7,7.8,8.3,11.2,11.3,11.4,12.3,12.8,13.4,13.6,13.7,13.9,14.4,14.9,14.9,15.3,15.6,16.5,17.5,17.9,18.2,18.4,18.6,19.4,20.0,20.1,20.4,20.5,20.5,20.8,21.6,21.6,23.0,23.1,24.1,24.2,24.4,24.6,24.7,24.9,25.3,25.5,25.9,25.9,26.2,26.9,28.2,28.3,28.6,29.9,31.2,32.4,33.5,33.7,34.7,34.7,35.2,37.0,37.1,38.2,39.4,40.4,40.4,40.8,41.1,41.2,41.3,41.3,41.4,42.2,42.5,43.1,43.3,43.4,43.7,43.8,43.9,44.2,44.7,45.5,45.5,45.6,45.9,46.4,46.6,46.8,46.8,46.9,47.7,47.8,47.8,47.8,48.4,48.7,49.2,49.3,49.3,49.6,49.6,49.7,49.9,50.4,50.7,50.7,50.9,51.5,51.5,52.2,52.3,52.6,52.9,53.6,53.6,53.8,54.4,54.6,54.9,54.9,55.1,55.5,55.5,55.8,55.9,56.3,57.2,57.5,57.5,57.6,57.9,58.5,58.8,59.1,59.2,59.7,59.9,60.2,61.3,61.8,62.1,62.1,62.3,62.7,63.1,63.6,64.6,64.8,64.9,65.2,66.2,67.0,67.1,67.2,67.7,67.8,67.9,68.9,68.9,69.1,69.2,70.0,70.4,70.6,70.9,71.1,71.5,72.0,72.4,73.0,73.3,73.5,73.9,74.0,74.1,74.5,74.6,74.7,75.0,75.4,75.5,75.7,76.2,76.3,77.6,78.1,78.2,79.2,80.0,80.1,80.5,80.8,81.1,82.3,82.5,83.0,83.0,83.2,83.5,84.1,84.5,84.5,85.0,85.5,85.9,86.0,86.5,87.1,87.5,88.8,91.4,91.5,91.9,94.7];
+
+const ROLES = ["owner", "admin", "tech", "customer"];
+
+const T = {
+  en: {
+    nav_how: "How it works", nav_features: "Features", nav_reports: "Reports", nav_faq: "Questions",
+    cta: "Request a pilot", cta2: "How it works", signin: "Sign in", signin_foot: "Sign in to TrapCount AI", privacy: "Privacy Policy", terms: "Terms of Use",
+    kicker: "For pest-control companies",
+    h1: "Every fly on the board, counted from one photo.",
+    sub: "Technicians photograph the glue board. TrapCount AI marks each fly and adds the count to a signed visit report.",
+    flies_counted: "flies counted", lg_solid: "Found by the model", lg_dashed: "Missed, added on check",
+    stage_note: "A real board from a customer site, not used in training, shown after the technician's check: wrong boxes and other insects removed, missed flies added.", replay: "Scan again",
+    cmp_h: "What changes for your team", cmp_p: "The technician still checks every trap. The counting, the proof and the paperwork get easier.",
+    col_old: "On paper", col_new: "With TrapCount AI",
+    row1: "Counting", row1_old: "Each fly counted by eye, trap after trap.", row1_new: "Each fly marked on the photo. The technician checks the dashed ones.",
+    row2: "Proof", row2_old: "A number on a sheet that nobody can check later.", row2_new: "The photo with every fly marked, signed on the day of the visit.",
+    row3: "Trends", row3_old: "Two people read the same board and write different numbers.", row3_new: "The same method every visit, with history for every trap.",
+    phone_note: "Real app screens in Arabic, with sample data",
+    how_h: "Three steps at each trap",
+    s1: "Photograph", s1_p: "Open today's visit, pick the trap, and take a photo of its glue board with the phone camera.",
+    s2: "Let the model count", s2_p: "The photo goes to our server. The model draws a box on every fly it finds and sends the count back.",
+    s3: "Check and save", s3_p: "Zoom in on the dashed boxes, correct the count if needed, and save. The trap's history and the visit report update.",
+    feat_h: "Everything around the count", feat_p: "Technicians use the Android app on site. Managers and your customers use the same system on the web.",
+    f1: "Scheduled visits", f1_p: "Admins give each visit one customer and one technician. Technicians only see their own visits, so nobody opens the wrong site.",
+    f2: "Every count in its place", pth1: "Customer", pth2: "Location", pth3: "Trap", f2_p: "With a map link for each location.",
+    f3: "Signed every time", f3_p: "The technician signs on the phone for each visit and each report. Signatures are never reused.",
+    f4: "Weak signal on site", f4_p: "The photo waits on the phone and is counted when the connection returns.",
+    f5: "History and trends", f5_p: "See each trap over time, the change since the last visit, and a trend chart with an average line.",
+    f6: "A portal for your customers", f6_p: "Customers sign in on the web, read the reports for their own sites, and reach you on WhatsApp or by phone.",
+    f7: "Alerts when a trap fills up", f7_p: "Set a level for each customer. When a count passes it, the right people get a notification and the visit email goes out.",
+    rep_note: "Real reports from the app, filled with sample data",
+    rep_h: "Reports your customer reads in a minute", rep_p: "Your logo, the technician's signature, Arabic or English. Pick one day, a date range, a detailed report, or the visit log.",
+    l1: "Inspections done", l2: "Total traps", l3: "Total visits", l4: "Flies on sheet", l5: "Since last visit", l6: "Days in use",
+    roles_h: "Each person sees their part",
+    role_owner: "Super Admin", role_admin: "Admin", role_tech: "Technician", role_customer: "Your customer",
+    where_owner: "Web and Android app", where_admin: "Web and Android app", where_tech: "Android app", where_customer: "Web portal",
+    list_owner: ["Owns the company account", "Adds admins and sets what each role can do", "Can switch a customer off or remove it"],
+    list_admin: ["Manages customers, locations and traps", "Schedules visits and assigns technicians", "Reads every report and trend"],
+    list_tech: ["Sees only their own visits", "Photographs boards and saves counts", "Signs and shares the report on site"],
+    list_customer: ["Reads the reports for their own sites", "Sees each finished visit", "Contacts your team on WhatsApp or by phone"],
+    st_h: "What is ready today", st_p: "We would rather show you what works now than quote numbers we have not measured yet.",
+    ready: "Ready", early: "Early model", later: "Later",
+    st1: "Android app", st1_p: "Visits, traps, photos, signatures, reports.",
+    st2: "Web for managers", st2_p: "Accounts, roles, visits, trends, alerts.",
+    st3: "Customer portal", st3_p: "Customers read their own reports.",
+    st4: "AI counting", st4_p: "Improves as we train it on more real boards.",
+    st5: "iPhone app", st5_p: "Android comes first.",
+    faq_h: "Questions companies ask first",
+    q1: "How accurate is the count?", a1: "The model is early, so we do not publish an accuracy figure yet. Boxes it is unsure about are dashed, and the technician can zoom in and correct the count before saving. During a pilot we measure it on your own boards.",
+    q2: "Does it need internet?", a2: "Counting runs on our server, so it needs a connection. If there is none on site, the photo stays on the phone and is counted when the connection returns.",
+    q3: "Can other companies see our data?", a3: "No. Every company has its own account, and the server keeps each company's customers, traps and visits apart.",
+    q4: "Is the count the number of new flies?", a4: "No. Each count is the total on the board in the photo. Reports show the change since the last visit, the sheet number, and how many days the sheet has been in use.",
+    q5: "Which languages and phones?", a5: "Arabic and English, with full right-to-left layout. The field app runs on Android phones. Managers and customers use any web browser.",
+    pilot_h: "Try it on your own traps", pilot_p: "A pilot runs on a few of your real sites, so you can judge the counts and the reports yourself.",
+    pl1: "We set up your company account and your technicians.", pl2: "Your team uses the app on real visits.", pl3: "We review the counts and the reports with you.",
+    c_h: "Talk to us", c_email: "Email", c_whatsapp: "WhatsApp", c_copy: "Copy", c_copied: "Copied",
+    c_empty: "Contact details will be added here soon.",
+    foot: "Fly-trap counting and visit reports for pest-control companies.",
+    lang_btn: "عربي", lang_label: "التبديل إلى العربية", theme_label: "Switch light or dark theme"
+  },
+  ar: {
+    nav_how: "طريقة العمل", nav_features: "المميزات", nav_reports: "التقارير", nav_faq: "أسئلة",
+    cta: "اطلب تجربة", cta2: "طريقة العمل", signin: "دخول", signin_foot: "تسجيل الدخول إلى TrapCount AI", privacy: "سياسة الخصوصية", terms: "شروط الاستخدام",
+    kicker: "لشركات مكافحة الآفات",
+    h1: "كل ذبابة على اللوح، تُعدّ من صورة واحدة.",
+    sub: "الفني يصوّر اللوح اللاصق. TrapCount AI يحدد كل ذبابة ويضيف العدد إلى تقرير زيارة موقّع.",
+    flies_counted: "ذبابة تم عدّها", lg_solid: "اكتشفها النموذج", lg_dashed: "فاتت النموذج وأُضيفت عند المراجعة",
+    stage_note: "لوح حقيقي من موقع عميل، لم يُستخدم في التدريب، بعد مراجعة الفني: حُذفت الصناديق الخاطئة والحشرات الأخرى، وأُضيف الذباب الذي فات النموذج.", replay: "اعرض المسح مرة أخرى",
+    cmp_h: "ما الذي يتغير لفريقك", cmp_p: "الفني ما زال يفحص كل مصيدة. لكن العدّ والإثبات والأوراق تصبح أسهل.",
+    col_old: "على الورق", col_new: "مع TrapCount AI",
+    row1: "العدّ", row1_old: "كل ذبابة تُعدّ بالعين، مصيدة بعد مصيدة.", row1_new: "كل ذبابة محددة على الصورة، والفني يراجع المربعات المتقطعة.",
+    row2: "الإثبات", row2_old: "رقم على ورقة لا يستطيع أحد التحقق منه لاحقًا.", row2_new: "صورة عليها كل ذبابة محددة، وموقّعة في يوم الزيارة.",
+    row3: "الاتجاهات", row3_old: "شخصان يقرآن اللوح نفسه ويكتبان رقمين مختلفين.", row3_new: "الطريقة نفسها في كل زيارة، مع سجل لكل مصيدة.",
+    phone_note: "شاشات حقيقية من التطبيق، ببيانات تجريبية",
+    how_h: "ثلاث خطوات عند كل مصيدة",
+    s1: "صوّر", s1_p: "افتح زيارة اليوم، اختر المصيدة، والتقط صورة للوح اللاصق بكاميرا الموبايل.",
+    s2: "اترك العدّ للنموذج", s2_p: "الصورة تذهب إلى السيرفر. النموذج يرسم مربعًا على كل ذبابة يجدها ويرجع العدد.",
+    s3: "راجع واحفظ", s3_p: "كبّر على المربعات المتقطعة، عدّل العدد لو احتجت، واحفظ. سجل المصيدة وتقرير الزيارة يتحدثان.",
+    feat_h: "كل ما حول العدّ", feat_p: "الفنيون يستخدمون تطبيق أندرويد في الموقع. والمديرون وعملاؤك يستخدمون النظام نفسه على الويب.",
+    f1: "زيارات مجدولة", f1_p: "المدير يحدد لكل زيارة عميلًا واحدًا وفنيًا واحدًا. والفني يرى زياراته فقط، فلا أحد يفتح موقعًا غير موقعه.",
+    f2: "كل عدد في مكانه", pth1: "العميل", pth2: "الموقع", pth3: "المصيدة", f2_p: "مع رابط خريطة لكل موقع.",
+    f3: "توقيع في كل مرة", f3_p: "الفني يوقّع على الموبايل في كل زيارة وكل تقرير. التوقيع لا يُعاد استخدامه.",
+    f4: "شبكة ضعيفة في الموقع", f4_p: "الصورة تنتظر على الموبايل وتُعدّ عند رجوع الاتصال.",
+    f5: "السجل والاتجاهات", f5_p: "تابع كل مصيدة عبر الوقت، والفرق عن آخر زيارة، ورسمًا للاتجاه مع خط المتوسط.",
+    f6: "بوابة لعملائك", f6_p: "العملاء يدخلون على الويب، يقرأون تقارير مواقعهم، ويتواصلون معك عبر واتساب أو الهاتف.",
+    f7: "تنبيه عندما تمتلئ المصيدة", f7_p: "حدد مستوى لكل عميل. عندما يتجاوزه العدد، يصل تنبيه للأشخاص المعنيين ويُرسل بريد الزيارة.",
+    rep_note: "تقارير حقيقية من التطبيق، ببيانات تجريبية",
+    rep_h: "تقارير يقرأها عميلك في دقيقة", rep_p: "شعار شركتك، وتوقيع الفني، بالعربي أو الإنجليزي. اختر يومًا أو فترة أو تقريرًا مفصلًا أو سجل الزيارات.",
+    l1: "عدد مرات الفحص", l2: "إجمالي المصائد", l3: "إجمالي الزيارات", l4: "الذباب على اللوح", l5: "الفرق عن آخر زيارة", l6: "أيام الاستخدام",
+    roles_h: "كل شخص يرى ما يخصه",
+    role_owner: "سوبر أدمن", role_admin: "أدمن", role_tech: "فني", role_customer: "عميلك",
+    where_owner: "الويب وتطبيق أندرويد", where_admin: "الويب وتطبيق أندرويد", where_tech: "تطبيق أندرويد", where_customer: "بوابة الويب",
+    list_owner: ["صاحب حساب الشركة", "يضيف المديرين ويحدد صلاحيات كل دور", "يستطيع إيقاف عميل أو حذفه"],
+    list_admin: ["يدير العملاء والمواقع والمصائد", "يجدول الزيارات ويحدد الفنيين", "يقرأ كل التقارير والاتجاهات"],
+    list_tech: ["يرى زياراته فقط", "يصوّر الألواح ويحفظ الأعداد", "يوقّع ويشارك التقرير في الموقع"],
+    list_customer: ["يقرأ تقارير مواقعه فقط", "يرى كل زيارة انتهت", "يتواصل مع فريقك عبر واتساب أو الهاتف"],
+    st_h: "ما هو جاهز اليوم", st_p: "نفضّل أن نريك ما يعمل الآن على أن نذكر أرقامًا لم نقِسها بعد.",
+    ready: "جاهز", early: "نموذج أولي", later: "لاحقًا",
+    st1: "تطبيق أندرويد", st1_p: "زيارات، مصائد، صور، توقيعات، تقارير.",
+    st2: "الويب للمديرين", st2_p: "حسابات، أدوار، زيارات، اتجاهات، تنبيهات.",
+    st3: "بوابة العملاء", st3_p: "العملاء يقرأون تقاريرهم.",
+    st4: "العدّ بالذكاء الاصطناعي", st4_p: "يتحسن كلما دربناه على ألواح حقيقية أكثر.",
+    st5: "تطبيق آيفون", st5_p: "أندرويد أولًا.",
+    faq_h: "أول ما تسألنا عنه الشركات",
+    q1: "ما مدى دقة العدّ؟", a1: "النموذج ما زال أوليًا، لذلك لا ننشر نسبة دقة بعد. المربعات غير المؤكدة تظهر متقطعة، والفني يستطيع التكبير وتعديل العدد قبل الحفظ. وأثناء التجربة نقيس الدقة على ألواحك أنت.",
+    q2: "هل يحتاج إنترنت؟", a2: "العدّ يتم على السيرفر، فيحتاج اتصالًا. لو لا يوجد اتصال في الموقع، تبقى الصورة على الموبايل وتُعدّ عند رجوعه.",
+    q3: "هل تستطيع شركات أخرى رؤية بياناتنا؟", a3: "لا. لكل شركة حسابها، والسيرفر يفصل عملاء ومصائد وزيارات كل شركة عن غيرها.",
+    q4: "هل العدد هو الذباب الجديد؟", a4: "لا. كل عدد هو إجمالي الذباب على اللوح في الصورة. والتقارير توضح الفرق عن آخر زيارة، ورقم اللوح، وعدد أيام استخدامه.",
+    q5: "ما اللغات والموبايلات المدعومة؟", a5: "العربية والإنجليزية، مع اتجاه كامل من اليمين لليسار. تطبيق الفني يعمل على موبايلات أندرويد، والمديرون والعملاء يستخدمون أي متصفح.",
+    pilot_h: "جرّبه على مصائدك أنت", pilot_p: "التجربة تتم على عدد من مواقعك الحقيقية، لتحكم بنفسك على العدّ والتقارير.",
+    pl1: "نجهز حساب شركتك وحسابات الفنيين.", pl2: "فريقك يستخدم التطبيق في زيارات حقيقية.", pl3: "نراجع الأعداد والتقارير معك.",
+    c_h: "تواصل معنا", c_email: "البريد الإلكتروني", c_whatsapp: "واتساب", c_copy: "نسخ", c_copied: "تم النسخ",
+    c_empty: "ستُضاف بيانات التواصل هنا قريبًا.",
+    foot: "عدّ ذباب المصائد وتقارير الزيارات لشركات مكافحة الآفات.",
+    lang_btn: "English", lang_label: "Switch to English", theme_label: "تبديل الوضع الفاتح أو الغامق"
+  }
+};
+
+let lang = "en";
+let role = "admin";
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+function renderContact() {
+  const t = T[lang], box = document.getElementById("contact-rows");
+  box.innerHTML = "";
+  const rows = [["c_email", CONTACT.email], ["c_whatsapp", CONTACT.whatsapp]].filter(r => r[1]);
+  box.style.display = "grid"; box.style.gap = "18px";
+  if (!rows.length) {
+    const p = document.createElement("p"); p.className = "contact-empty"; p.textContent = t.c_empty; box.append(p); return;
+  }
+  for (const [key, value] of rows) {
+    const row = document.createElement("div"); row.className = "contact-row";
+    const k = document.createElement("span"); k.className = "k"; k.textContent = t[key];
+    const v = document.createElement("span"); v.className = "v";
+    const val = document.createElement("a"); val.textContent = value; val.dir = "ltr"; val.style.color = "inherit";
+    val.href = key === "c_email" ? "mailto:" + value : "https://wa.me/" + value.replace(/\D/g, "");
+    if (key !== "c_email") { val.target = "_blank"; val.rel = "noopener"; }
+    const b = document.createElement("button"); b.type = "button"; b.className = "copy"; b.textContent = t.c_copy;
+    b.addEventListener("click", () => {
+      const done = () => { b.textContent = t.c_copied; setTimeout(() => (b.textContent = t.c_copy), 1500); };
+      const fallback = () => { const r = document.createRange(); r.selectNodeContents(val); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+      if (navigator.clipboard) navigator.clipboard.writeText(value).then(done, fallback); else fallback();
+    });
+    v.append(val, b); row.append(k, v); box.append(row);
+  }
+}
+
+function renderRoles(animate) {
+  const t = T[lang], tabs = document.getElementById("tabs"), panel = document.getElementById("panel");
+  tabs.innerHTML = "";
+  ROLES.forEach(r => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tab"; b.setAttribute("role", "tab"); b.id = "tab-" + r;
+    b.setAttribute("aria-selected", String(r === role)); b.setAttribute("aria-controls", "panel");
+    b.tabIndex = r === role ? 0 : -1;
+    b.textContent = t["role_" + r];
+    b.addEventListener("click", () => { role = r; renderRoles(true); document.getElementById("tab-" + r).focus(); });
+    b.addEventListener("keydown", e => {
+      const keys = lang === "ar" ? { ArrowLeft: 1, ArrowRight: -1 } : { ArrowLeft: -1, ArrowRight: 1 };
+      if (!(e.key in keys)) return;
+      e.preventDefault();
+      role = ROLES[(ROLES.indexOf(role) + keys[e.key] + ROLES.length) % ROLES.length];
+      renderRoles(true); document.getElementById("tab-" + role).focus();
+    });
+    tabs.append(b);
+  });
+  panel.setAttribute("aria-labelledby", "tab-" + role);
+  panel.innerHTML = "";
+  const left = document.createElement("div");
+  const h = document.createElement("h3"); h.textContent = t["role_" + role];
+  const w = document.createElement("p"); w.className = "where";
+  w.innerHTML = '<span class="ms" aria-hidden="true">' + (role === "tech" ? "smartphone" : role === "customer" ? "language" : "devices") + "</span>";
+  w.append(document.createTextNode(t["where_" + role]));
+  left.append(h, w);
+  const ul = document.createElement("ul");
+  t["list_" + role].forEach(s => { const li = document.createElement("li"); li.innerHTML = '<span class="ms" aria-hidden="true">check</span>'; const sp = document.createElement("span"); sp.textContent = s; li.append(sp); ul.append(li); });
+  panel.append(left, ul);
+  if (animate) { panel.classList.remove("swap"); void panel.offsetWidth; panel.classList.add("swap"); }
+}
+
+function setLang(next) {
+  lang = next;
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.getElementById("stage").setAttribute("dir-ui", lang === "ar" ? "rtl" : "ltr");
+  document.querySelectorAll("[data-i18n]").forEach(el => { const v = t[el.dataset.i18n]; if (typeof v === "string") el.textContent = v; });
+  document.querySelectorAll("[data-label]").forEach(el => { el.dataset.label = el.classList.contains("new") ? t.col_new : t.col_old; });
+  const lb = document.getElementById("langBtn");
+  lb.textContent = t.lang_btn; lb.setAttribute("aria-label", t.lang_label);
+  document.getElementById("themeBtn").setAttribute("aria-label", t.theme_label);
+  renderContact(); renderRoles(false);
+  store.set("tc-lang", lang);
+}
+
+/* The hero scan: one orchestrated moment. The page is complete at rest (all boxes, full count); the scan replays it. */
+const stage = document.getElementById("stage"), board = document.getElementById("board"), countEl = document.getElementById("count");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+let scanId = 0;
+function runScan() {
+  if (reduceMotion.matches) { board.style.setProperty("--p", "100%"); countEl.textContent = FLY_X.length; return; }
+  const id = ++scanId, duration = 3200, start = performance.now();
+  stage.classList.add("running");
+  const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+  const frame = now => {
+    if (id !== scanId) return;
+    const k = Math.min(1, (now - start) / duration), p = ease(k) * 100;
+    board.style.setProperty("--p", p + "%");
+    countEl.textContent = FLY_X.filter(x => x <= p).length;
+    if (k < 1) requestAnimationFrame(frame);
+    else { stage.classList.remove("running"); countEl.textContent = FLY_X.length; }
+  };
+  board.style.setProperty("--p", "0%"); countEl.textContent = "0";
+  requestAnimationFrame(frame);
+}
+document.getElementById("replay").addEventListener("click", runScan);
+
+document.getElementById("langBtn").addEventListener("click", () => setLang(lang === "en" ? "ar" : "en"));
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+  store.set("tc-theme", root.dataset.theme);
+});
+const bar = document.getElementById("top-bar");
+new IntersectionObserver(([e]) => bar.classList.toggle("scrolled", !e.isIntersecting), { rootMargin: "-80px 0px 0px 0px" }).observe(document.querySelector(".hero-head"));
+/* How it works: the phone shows the screen for the step being read. */
+const stepEls = document.querySelectorAll(".steps li"), scrEls = document.querySelectorAll(".device .scr");
+const showStep = n => { stepEls.forEach(li => li.classList.toggle("active", li.dataset.step === n)); scrEls.forEach(im => im.classList.toggle("on", im.dataset.step === n)); };
+const stepObs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) showStep(e.target.dataset.step); }), { rootMargin: "-40% 0px -50% 0px" });
+stepEls.forEach(li => stepObs.observe(li));
+document.getElementById("year").textContent = new Date().getFullYear();
+
+const savedTheme = store.get("tc-theme");
+if (savedTheme === "dark" || savedTheme === "light") document.documentElement.dataset.theme = savedTheme;
+const savedLang = store.get("tc-lang");
+setLang(savedLang === "ar" || savedLang === "en" ? savedLang : ((navigator.language || "").startsWith("ar") ? "ar" : "en"));
+const boardImg = board.querySelector(".marked");
+if (boardImg.complete) setTimeout(runScan, 500); else boardImg.addEventListener("load", () => setTimeout(runScan, 500), { once: true });
+</script>
+
+</body>
+</html>
