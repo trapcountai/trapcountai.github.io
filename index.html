@@ -271,6 +271,8 @@ html[dir="rtl"] .st { padding: 22px 0 0 18px; }
 footer { padding-block: 36px 44px; color: var(--slate); font-size: 14px; }
 .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
 .foot-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.foot-credit { flex-basis: 100%; font-size: 0.85em; opacity: 0.75; }
+.foot-credit a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -519,6 +521,7 @@ footer { padding-block: 36px 44px; color: var(--slate); font-size: 14px; }
     <span>© <span id="year">2026</span> TrapCount AI</span>
     <span data-i18n="foot">Fly-trap counting and visit reports for pest-control companies.</span>
     <span class="foot-links"><a href="privacy.html" data-i18n="privacy">Privacy Policy</a><a href="terms.html" data-i18n="terms">Terms of Use</a><a href="app/" data-i18n="signin_foot">Sign in to TrapCount AI</a></span>
+    <span class="foot-credit"><span data-i18n="credit">Fly detection is built on YOLOX, © Megvii, used under the</span> <a href="https://github.com/Megvii-BaseDetection/YOLOX/blob/main/LICENSE" target="_blank" rel="noopener">Apache License 2.0</a></span>
   </div>
 </footer>
 
@@ -537,7 +540,7 @@ const ROLES = ["owner", "admin", "tech", "customer"];
 const T = {
   en: {
     nav_how: "How it works", nav_features: "Features", nav_reports: "Reports", nav_faq: "Questions",
-    cta: "Request a pilot", cta2: "How it works", signin: "Sign in", signin_foot: "Sign in to TrapCount AI", privacy: "Privacy Policy", terms: "Terms of Use",
+    cta: "Request a pilot", cta2: "How it works", signin: "Sign in", signin_foot: "Sign in to TrapCount AI", credit: "Fly detection is built on YOLOX, © Megvii, used under the", privacy: "Privacy Policy", terms: "Terms of Use",
     kicker: "For pest-control companies",
     h1: "Every fly on the board, counted from one photo.",
     sub: "Technicians photograph the glue board. TrapCount AI marks each fly and adds the count to a signed visit report.",
@@ -593,7 +596,7 @@ const T = {
   },
   ar: {
     nav_how: "طريقة العمل", nav_features: "المميزات", nav_reports: "التقارير", nav_faq: "أسئلة",
-    cta: "اطلب تجربة", cta2: "طريقة العمل", signin: "دخول", signin_foot: "تسجيل الدخول إلى TrapCount AI", privacy: "سياسة الخصوصية", terms: "شروط الاستخدام",
+    cta: "اطلب تجربة", cta2: "طريقة العمل", signin: "دخول", signin_foot: "تسجيل الدخول إلى TrapCount AI", credit: "يعتمد كشف الذباب على نموذج YOLOX من شركة Megvii، ومستخدم بموجب رخصة", privacy: "سياسة الخصوصية", terms: "شروط الاستخدام",
     kicker: "لشركات مكافحة الآفات",
     h1: "كل ذبابة على اللوح، تُعدّ من صورة واحدة.",
     sub: "الفني يصوّر اللوح اللاصق. TrapCount AI يحدد كل ذبابة ويضيف العدد إلى تقرير زيارة موقّع.",
